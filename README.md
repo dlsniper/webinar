@@ -41,3 +41,7 @@ This builds a Go binary then it adds Delve to a Docker container and runs them b
  ```bash
 /dlv --listen=:40000 --headless=true --api-version=2 exec /webinar
 ```
+
+### License
+
+This project is under Apache 2.0 license, please see the LICENSE file.
