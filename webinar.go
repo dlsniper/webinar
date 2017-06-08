@@ -8,13 +8,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "user-agent", r.Header.Get("user-agent"))
-}
-
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/", HomeHandler)
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "user-agent %s", r.Header.Get("user-agent"))
+	})
 	http.Handle("/", r)
-	log.Fatal(http.ListenAndServe(":8000", r))
+	log.Println("starting server...")
+	log.Println(http.ListenAndServe(":8000", r))
 }
