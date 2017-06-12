@@ -23,15 +23,24 @@ If a newer version of Docker is not available, you can still use ` container-deb
 
 #### Running
 
+##### Container
+
 To run the container use:
 
 ```bash
 docker run --rm \
     --name=webinar-debug \
     -p 8000:8000 \
-    -p 2345:40000 \
-    --security-opt=seccomp:unconfined \
+    -p 40000:40000 \
+    --security-opt="apparmor=unconfined" \
+    --cap-add=SYS_PTRACE
     webinar:debug
+```
+
+##### Debugger
+
+```bash
+dlv --api-version=2 connect localhost:40000
 ```
 
 ### What does it do?
