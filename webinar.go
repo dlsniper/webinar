@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -26,7 +27,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
@@ -41,7 +41,7 @@ type (
 	}
 
 	toodos struct {
-		db *sqlx.DB
+		db *sql.DB
 	}
 )
 
@@ -72,7 +72,8 @@ func (*toodos) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (t *toodos) exists(ctx context.Context, id string) (bool, error) {
 	var c int
-	err := t.db.GetContext(ctx, &c, QueryExists, id)
+	row := t.db.QueryRowContext(ctx, QueryExists, id)
+	err := row.Scan(&c)
 	return c > 0, err
 }
 
@@ -87,7 +88,30 @@ func (t *toodos) update(ctx context.Context, todo toodo) (bool, error) {
 
 func (t *toodos) loadExisting(ctx context.Context) ([]toodo, error) {
 	toodos := []toodo{}
-	err := t.db.SelectContext(ctx, &toodos, QuerySelectAll)
+
+	rows, err := t.db.QueryContext(ctx, QuerySelectAll)
+	if err != nil {
+		return nil, err
+	}
+	// if something happens here, we want to make sure the rows are Closed
+	defer rows.Close()
+
+	for rows.Next() {
+		var ID string
+		var Title string
+		var Completed bool
+		var CreatedAt time.Time
+		err := rows.Scan(&ID, &Title, &Completed, &CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		toodos = append(toodos, toodo{ID, Title, Completed, CreatedAt, true})
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
 	return toodos, err
 }
 
@@ -169,8 +193,11 @@ func (t *toodos) postToodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *toodos) getToodos(w http.ResponseWriter, r *http.Request) {
-	toodos := []toodo{}
-	t.db.SelectContext(r.Context(), &toodos, QuerySelectAll)
+	toodos, err := t.loadExisting(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	resp, _ := json.Marshal(toodos)
 	w.Header().Set("Content-Type", "application/json")
@@ -179,12 +206,12 @@ func (t *toodos) getToodos(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	db, err := sqlx.Connect("postgres", "postgres://postgres:postgres@db:5432/toodo?sslmode=disable")
+	db, err := sql.Open("postgres", "postgres://postgres:postgres@db:5432/toodo?sslmode=disable")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	db.MustExec(dbInit)
+	_, err = db.Exec(dbInit)
 
 	toodoo := &toodos{
 		db: db,
