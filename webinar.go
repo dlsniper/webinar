@@ -17,7 +17,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -70,15 +69,15 @@ func (*toodos) homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-func (t *toodos) exists(ctx context.Context, id string) (bool, error) {
+func (t *toodos) exists(id string) (bool, error) {
 	var c int
-	row := t.db.QueryRowContext(ctx, QueryExists, id)
+	row := t.db.QueryRow(QueryExists, id)
 	err := row.Scan(&c)
 	return c > 0, err
 }
 
-func (t *toodos) update(ctx context.Context, todo toodo) (bool, error) {
-	res, err := t.db.ExecContext(ctx, QueryUpdate, todo.ID, todo.Title, todo.Completed, todo.ID)
+func (t *toodos) update(todo toodo) (bool, error) {
+	res, err := t.db.Exec(QueryUpdate, todo.ID, todo.Title, todo.Completed, todo.ID)
 	if err != nil {
 		return false, err
 	}
@@ -86,10 +85,10 @@ func (t *toodos) update(ctx context.Context, todo toodo) (bool, error) {
 	return ra == 1, err
 }
 
-func (t *toodos) loadExisting(ctx context.Context) ([]toodo, error) {
+func (t *toodos) loadExisting() ([]toodo, error) {
 	toodos := []toodo{}
 
-	rows, err := t.db.QueryContext(ctx, QuerySelectAll)
+	rows, err := t.db.Query(QuerySelectAll)
 	if err != nil {
 		return nil, err
 	}
@@ -115,14 +114,18 @@ func (t *toodos) loadExisting(ctx context.Context) ([]toodo, error) {
 	return toodos, err
 }
 
-func (t *toodos) delete(ctx context.Context, id string) error {
-	_, err := t.db.ExecContext(ctx, QueryDelete, id)
+func (t *toodos) delete(id string) error {
+	_, err := t.db.Exec(QueryDelete, id)
+	if err != nil {
+		log.Printf("got error: %v\n", err)
+	}
 	return err
 }
 
 func (t *toodos) postToodo(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.Printf("got error: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "%v", err)
 		return
@@ -132,18 +135,21 @@ func (t *toodos) postToodo(w http.ResponseWriter, r *http.Request) {
 	toodos := []toodo{}
 	err = json.Unmarshal(body, &toodos)
 	if err != nil {
+		log.Printf("got error: %v\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "%v", err)
 		return
 	}
 
 	if len(toodos) == 0 {
+		log.Printf("no new toodo to add")
 		t.getToodos(w, r)
 		return
 	}
 
-	existingTodos, err := t.loadExisting(r.Context())
+	existingTodos, err := t.loadExisting()
 	if err != nil {
+		log.Printf("got error: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "%v", err)
 		return
@@ -160,32 +166,39 @@ func (t *toodos) postToodo(w http.ResponseWriter, r *http.Request) {
 		return false
 	}
 
+	lenNotFound := 0
 	for idx := range toodos {
 		if toodos[idx].CreatedAt.IsZero() {
 			toodos[idx].CreatedAt = time.Now()
 		}
 
 		if markFound(toodos[idx].ID) {
-			_, err := t.update(r.Context(), toodos[idx])
+			_, err := t.update(toodos[idx])
 			if err != nil {
+				log.Printf("got error: %v\n", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprintf(w, "%v", err)
 				return
 			}
 			continue
+		} else {
+			lenNotFound++
 		}
 
-		_, err = t.db.ExecContext(r.Context(), QueryInsert, toodos[idx].ID, toodos[idx].Title, toodos[idx].Completed, toodos[idx].CreatedAt)
+		_, err = t.db.Exec(QueryInsert, toodos[idx].ID, toodos[idx].Title, toodos[idx].Completed, toodos[idx].CreatedAt)
 		if err != nil {
+			log.Printf("got error: %v\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "%v", err)
 			return
 		}
 	}
 
-	for idx := range toodos {
-		if !toodos[idx].found {
-			t.delete(r.Context(), toodos[idx].ID)
+	if lenNotFound != len(existingTodos) {
+		for idx := range existingTodos {
+			if !existingTodos[idx].found {
+				t.delete(existingTodos[idx].ID)
+			}
 		}
 	}
 
@@ -193,25 +206,33 @@ func (t *toodos) postToodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *toodos) getToodos(w http.ResponseWriter, r *http.Request) {
-	toodos, err := t.loadExisting(r.Context())
+	toodos, err := t.loadExisting()
 	if err != nil {
+		log.Printf("got error: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	resp, _ := json.Marshal(toodos)
+	resp, err := json.Marshal(toodos)
+	if err != nil {
+		log.Printf("got error: %v\n", err)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
 }
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	db, err := sql.Open("postgres", "postgres://postgres:postgres@db:5432/toodo?sslmode=disable")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	_, err = db.Exec(dbInit)
+	if err != nil {
+		log.Fatalf("got error: %v\n", err)
+	}
 
 	toodoo := &toodos{
 		db: db,
