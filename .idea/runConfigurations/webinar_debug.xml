@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="webinar-debug" type="GoRemoteDebugConfigurationType" factoryName="Go Remote" port="40000">
+    <method />
+  </configuration>
+</component>

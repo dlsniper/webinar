@@ -1,0 +1,41 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="docker-debug" type="docker-deploy" factoryName="Docker Deployment" singleton="true" server-name="Docker">
+    <deployment type="dockerfile" path="$PROJECT_DIR$/Dockerfile">
+      <settings>
+        <option name="JSONFilePath" value="$PROJECT_DIR$/container_settings.json" />
+        <option name="command" value="" />
+        <option name="containerName" value="webinar-debug" />
+        <option name="entrypoint" value="" />
+        <option name="imageTag" value="dev" />
+        <option name="links">
+          <list>
+            <DockerLinkImpl>
+              <option name="alias" value="db" />
+              <option name="name" value="webinar-db" />
+            </DockerLinkImpl>
+          </list>
+        </option>
+        <option name="linksExpanded" value="true" />
+        <option name="portBindings">
+          <list>
+            <DockerPortBindingImpl>
+              <option name="containerPort" value="8000" />
+              <option name="hostIp" value="0.0.0.0" />
+              <option name="hostPort" value="8000" />
+            </DockerPortBindingImpl>
+            <DockerPortBindingImpl>
+              <option name="containerPort" value="40000" />
+              <option name="hostIp" value="0.0.0.0" />
+              <option name="hostPort" value="40000" />
+            </DockerPortBindingImpl>
+          </list>
+        </option>
+        <option name="portBindingsExpanded" value="true" />
+        <option name="startBrowserSettings">
+          <browser url="http://localhost:8000" />
+        </option>
+      </settings>
+    </deployment>
+    <method />
+  </configuration>
+</component>

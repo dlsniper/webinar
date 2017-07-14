@@ -36,6 +36,8 @@ type (
 		Title     string    `json:"title"`
 		Completed bool      `json:"completed"`
 		CreatedAt time.Time `json:"-"`
+
+		found bool
 	}
 
 	toodos struct {
@@ -55,6 +57,8 @@ CREATE TABLE IF NOT EXISTS toodo (
 	QueryInsert    = `INSERT INTO toodo (ID, Title, Completed, CreatedAt) VALUES ($1, $2, $3, $4)`
 	QuerySelectAll = `SELECT * FROM toodo ORDER BY CreatedAt DESC`
 	QueryExists    = `SELECT count(*) as c FROM toodo WHERE ID = $1`
+	QueryUpdate    = `UPDATE toodo set ID=$1, Title=$2, Completed=$3 WHERE ID = $4`
+	QueryDelete    = `DELETE FROM toodo WHERE ID = $1`
 )
 
 func (*toodos) homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -68,8 +72,28 @@ func (*toodos) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (t *toodos) exists(ctx context.Context, id string) (bool, error) {
 	var c int
-	err := t.db.SelectContext(ctx, &c, QueryExists, id)
+	err := t.db.GetContext(ctx, &c, QueryExists, id)
 	return c > 0, err
+}
+
+func (t *toodos) update(ctx context.Context, todo toodo) (bool, error) {
+	res, err := t.db.ExecContext(ctx, QueryUpdate, todo.ID, todo.Title, todo.Completed, todo.ID)
+	if err != nil {
+		return false, err
+	}
+	ra, err := res.RowsAffected()
+	return ra == 1, err
+}
+
+func (t *toodos) loadExisting(ctx context.Context) ([]toodo, error) {
+	toodos := []toodo{}
+	err := t.db.SelectContext(ctx, &toodos, QuerySelectAll)
+	return toodos, err
+}
+
+func (t *toodos) delete(ctx context.Context, id string) error {
+	_, err := t.db.ExecContext(ctx, QueryDelete, id)
+	return err
 }
 
 func (t *toodos) postToodo(w http.ResponseWriter, r *http.Request) {
@@ -94,12 +118,36 @@ func (t *toodos) postToodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	existingTodos, err := t.loadExisting(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "%v", err)
+		return
+	}
+
+	markFound := func(id string) bool {
+		for idx := range existingTodos {
+			if existingTodos[idx].ID == id {
+				existingTodos[idx].found = true
+				return true
+			}
+		}
+
+		return false
+	}
+
 	for idx := range toodos {
 		if toodos[idx].CreatedAt.IsZero() {
 			toodos[idx].CreatedAt = time.Now()
 		}
 
-		if t.exists(r.Context(), toodos[idx].ID) {
+		if markFound(toodos[idx].ID) {
+			_, err := t.update(r.Context(), toodos[idx])
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, "%v", err)
+				return
+			}
 			continue
 		}
 
@@ -108,6 +156,12 @@ func (t *toodos) postToodo(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "%v", err)
 			return
+		}
+	}
+
+	for idx := range toodos {
+		if !toodos[idx].found {
+			t.delete(r.Context(), toodos[idx].ID)
 		}
 	}
 

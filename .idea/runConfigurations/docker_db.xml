@@ -1,0 +1,27 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="docker-db" type="docker-deploy" factoryName="Docker Deployment" singleton="true" server-name="Docker">
+    <deployment type="dockerfile" path="$PROJECT_DIR$/db/Dockerfile">
+      <settings>
+        <option name="JSONFilePath" value="$PROJECT_DIR$/db/container_settings.json" />
+        <option name="command" value="" />
+        <option name="containerName" value="webinar-db" />
+        <option name="entrypoint" value="" />
+        <option name="imageTag" value="db" />
+        <option name="portBindings">
+          <list>
+            <DockerPortBindingImpl>
+              <option name="containerPort" value="5432" />
+              <option name="hostIp" value="0.0.0.0" />
+              <option name="hostPort" value="5432" />
+            </DockerPortBindingImpl>
+          </list>
+        </option>
+        <option name="portBindingsExpanded" value="true" />
+        <option name="startBrowserSettings">
+          <browser />
+        </option>
+      </settings>
+    </deployment>
+    <method />
+  </configuration>
+</component>
