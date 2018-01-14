@@ -1,5 +1,5 @@
 {
-  "_comment": "FOR DETAILED FORMAT LOOK AT https://docs.docker.com/reference/api/docker_remote_api_v1.16/#create-a-container",
+  "_comment": "FOR DETAILED FORMAT LOOK AT https://docs.docker.com/engine/api/v1.22/#create-a-container",
   "AttachStdin": true,
   "OpenStdin": true,
   "HostConfig": {
@@ -7,6 +7,7 @@
       "8000/tcp": [{ "HostIp": "0.0.0.0", "HostPort": "8000" }],
       "40000/tcp": [{ "HostIp": "0.0.0.0", "HostPort": "40000" }]
     },
-    "SecurityOpt": ["seccomp:unconfined"]
+    "SecurityOpt": ["apparmor=unconfined"],
+    "CapAdd": ["SYS_PTRACE"]
   }
 }

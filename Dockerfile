@@ -1,13 +1,11 @@
-# build stage
-FROM golang:1.8.3 AS build-env
+FROM golang:1.10beta1
 ADD . /go/src/github.com/dlsniper/webinar
 RUN go build -gcflags="-N -l" -o /webinar github.com/dlsniper/webinar
 
-# final stage
-FROM ubuntu:16.04
 WORKDIR /
-COPY --from=build-env /webinar /
 ADD dlv /
+ADD ui /ui
+
 RUN chmod +x /dlv /webinar
 
 EXPOSE 8000 40000

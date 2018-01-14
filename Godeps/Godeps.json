@@ -8,8 +8,28 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/gorilla/mux",
-			"Comment": "v1.3.0-6-g4c1c395",
-			"Rev": "4c1c3952b7d9d0a061a3fa7b36fd373ba0398ebc"
+			"Comment": "v1.4.0-13-gac112f7",
+			"Rev": "ac112f7d75a0714af1bd86ab17749b31f7809640"
+		},
+		{
+			"ImportPath": "github.com/jmoiron/sqlx",
+			"Comment": "sqlx-v1.1-123-gd9bd385",
+			"Rev": "d9bd385d68c068f1fabb5057e3dedcbcbb039d0f"
+		},
+		{
+			"ImportPath": "github.com/jmoiron/sqlx/reflectx",
+			"Comment": "sqlx-v1.1-123-gd9bd385",
+			"Rev": "d9bd385d68c068f1fabb5057e3dedcbcbb039d0f"
+		},
+		{
+			"ImportPath": "github.com/lib/pq",
+			"Comment": "go1.0-cutoff-173-gdd1fe20",
+			"Rev": "dd1fe2071026ce53f36a39112e645b4d4f5793a4"
+		},
+		{
+			"ImportPath": "github.com/lib/pq/oid",
+			"Comment": "go1.0-cutoff-173-gdd1fe20",
+			"Rev": "dd1fe2071026ce53f36a39112e645b4d4f5793a4"
 		}
 	]
 }
