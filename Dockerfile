@@ -1,4 +1,4 @@
-FROM golang:1.8.3
+FROM golang:1.10beta1
 ADD . /go/src/github.com/dlsniper/webinar
 RUN go build -gcflags="-N -l" -o /webinar github.com/dlsniper/webinar
 

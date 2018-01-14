@@ -1,12 +1,13 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="docker-debug" type="docker-deploy" factoryName="Docker Deployment" singleton="true" server-name="Docker">
-    <deployment type="dockerfile" path="$PROJECT_DIR$/Dockerfile">
+  <configuration default="false" name="docker-debug" type="docker-deploy" factoryName="dockerfile" singleton="true" server-name="Docker">
+    <deployment type="dockerfile">
       <settings>
-        <option name="JSONFilePath" value="$PROJECT_DIR$/container_settings.json" />
+        <option name="JSONFilePath" value="" />
         <option name="command" value="" />
-        <option name="containerName" value="webinar-debug" />
+        <option name="commandLineOptions" value="--cap-add=SYS_PTRACE" />
+        <option name="containerName" value="webinar" />
         <option name="entrypoint" value="" />
-        <option name="imageTag" value="dev" />
+        <option name="imageTag" value="webinar" />
         <option name="links">
           <list>
             <DockerLinkImpl>
@@ -20,17 +21,16 @@
           <list>
             <DockerPortBindingImpl>
               <option name="containerPort" value="8000" />
-              <option name="hostIp" value="0.0.0.0" />
               <option name="hostPort" value="8000" />
             </DockerPortBindingImpl>
             <DockerPortBindingImpl>
               <option name="containerPort" value="40000" />
-              <option name="hostIp" value="0.0.0.0" />
               <option name="hostPort" value="40000" />
             </DockerPortBindingImpl>
           </list>
         </option>
         <option name="portBindingsExpanded" value="true" />
+        <option name="sourceFilePath" value="Dockerfile" />
         <option name="startBrowserSettings">
           <browser url="http://localhost:8000" />
         </option>

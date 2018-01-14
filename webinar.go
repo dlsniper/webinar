@@ -231,7 +231,7 @@ func main() {
 
 	_, err = db.Exec(dbInit)
 	if err != nil {
-		log.Fatalf("got error: %v\n", err)
+		log.Fatalf("	got error: %v\n", err)
 	}
 
 	toodoo := &toodos{
@@ -240,7 +240,7 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.PathPrefix("/ui/").HandlerFunc(http.StripPrefix("/ui", http.FileServer(http.Dir("/ui/"))).ServeHTTP)
+	r.PathPrefix("/ui/").Handler(http.StripPrefix("/ui", http.FileServer(http.Dir("/ui/"))))
 
 	r.HandleFunc("/toodo", toodoo.getToodos).
 		Methods("GET")
