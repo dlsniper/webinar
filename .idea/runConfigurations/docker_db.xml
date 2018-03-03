@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="docker-db" type="docker-deploy" factoryName="dockerfile" singleton="true" server-name="Docker">
     <deployment type="dockerfile">
@@ -26,3 +27,4 @@
     <method />
   </configuration>
 </component>
+
