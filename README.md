@@ -13,7 +13,7 @@ please see the manual: https://docs.docker.com/engine/userguide/eng-image/multis
 
 To build the container use:
 ```bash
-docker build -t webinar:debug 
+docker build -t webinar:debug .
 ```
 
 #### Docker < 17.05
